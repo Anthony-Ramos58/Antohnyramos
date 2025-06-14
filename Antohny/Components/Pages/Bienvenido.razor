@@ -1,0 +1,122 @@
+﻿@page "/bienvenido"
+@using Microsoft.AspNetCore.Components.Web
+@inject IJSRuntime JS
+
+<!-- Contenedor blanco total -->
+<div style="background-color: white; min-height: 100vh; padding: 2rem;">
+
+    <h1 class="text-center mb-3 text-@themeColor">¡Bienvenido a <strong>RendiMas</strong>!</h1>
+    <p class="text-center text-muted mb-4">Tu asistente para tareas de secundaria</p>
+
+    <div class="row justify-content-center">
+        <!-- Selección de grado -->
+        <div class="col-md-3 mb-4">
+            <div class="card shadow p-3 border-top border-3 border-@themeColor bg-white">
+                <h5 class="text-center mb-2">Grado:</h5>
+                <select class="form-select" @bind="grado">
+                    <option disabled selected value="">-- Selecciona grado --</option>
+                    <option>1° de secundaria</option>
+                    <option>2° de secundaria</option>
+                    <option>3° de secundaria</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Selección de curso -->
+        <div class="col-md-5 mb-4">
+            <div class="card shadow p-3 border-top border-3 border-@themeColor bg-white">
+                <h5 class="text-center mb-2">Curso:</h5>
+                <div class="d-flex justify-content-around flex-wrap gap-2">
+                    @foreach (var c in cursos)
+                    {
+                        <button class="btn btn-outline-@GetButtonStyle(c)"
+                                @onclick="() => SeleccionarCurso(c)">
+                            @c
+                        </button>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chat académico -->
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow p-4 border-start border-4 border-@themeColor bg-white">
+                <h5 class="mb-3 text-@themeColor">🤖 Chat académico - @cursoSeleccionado</h5>
+                <div class="chat-box border rounded p-3 mb-3" style="height: 250px; overflow-y: auto; background-color: #f9f9f9;">
+                    @foreach (var mensaje in mensajes)
+                    {
+                        <div class="mb-2">
+                            <strong>@mensaje.Rol:</strong> @mensaje.Texto
+                        </div>
+                    }
+                </div>
+
+                <div class="input-group">
+                    <input type="text" class="form-control" placeholder="Pregunta algo..." @bind="mensajeUsuario" @onkeydown="OnEnter" />
+                    <button class="btn btn-@themeColor" @onclick="EnviarMensaje">Enviar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center mt-4">
+        <a href="/" class="btn btn-outline-dark">🔙 Volver al inicio</a>
+    </div>
+
+</div>
+
+@code {
+    private string grado = "";
+    private string cursoSeleccionado = "Curso no seleccionado";
+    private string mensajeUsuario = "";
+    private List<Mensaje> mensajes = new();
+    private string themeColor = "primary";
+
+    private List<string> cursos = new() { "Matemáticas", "Comunicación", "Historia", "Inglés" };
+
+    private void SeleccionarCurso(string curso)
+    {
+        cursoSeleccionado = curso;
+        themeColor = curso switch
+        {
+            "Matemáticas" => "success",
+            "Comunicación" => "danger",
+            "Historia" => "warning",
+            "Inglés" => "info",
+            _ => "primary"
+        };
+    }
+
+    private string GetButtonStyle(string curso)
+    {
+        return curso == cursoSeleccionado ? themeColor : "secondary";
+    }
+
+    private void EnviarMensaje()
+    {
+        if (string.IsNullOrWhiteSpace(mensajeUsuario)) return;
+
+        mensajes.Add(new Mensaje { Rol = "Tú", Texto = mensajeUsuario });
+
+        var respuesta = $"📚 Estás preguntando sobre \"{cursoSeleccionado}\". Pronto tendrás una respuesta.";
+        mensajes.Add(new Mensaje { Rol = "RendiBot", Texto = respuesta });
+
+        mensajeUsuario = "";
+    }
+
+    private void OnEnter(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            EnviarMensaje();
+        }
+    }
+
+    public class Mensaje
+    {
+        public string Rol { get; set; }
+        public string Texto { get; set; }
+    }
+}
